@@ -1,0 +1,33 @@
+<?php
+%header%
+
+require_once %require_once_edit_fns%;
+
+/**
+* %class_name%_Edit_Fns
+*
+* Purpose
+*
+* @author  Geoffroy Noel <gnoel@squiz.co.uk>
+* @version $Revision$
+* @package MySource_Matrix_Packages
+* @subpackage %package%
+*/
+class %class_name%_Edit_Fns extends %parent_class_name%_Edit_Fns
+{
+
+
+	/**
+	* Constructor
+	*
+	*/
+	function __construct()
+	{
+		parent::__construct();
+
+	}//end constructor
+
+
+}//end class
+
+?>

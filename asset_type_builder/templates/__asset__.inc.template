@@ -1,0 +1,35 @@
+<?php
+%header%
+
+require_once %require_once%;
+
+/**
+* %class_name%
+*
+* Purpose
+*
+* @author  Geoffroy Noel <gnoel@squiz.co.uk>
+* @version $Revision$
+* @package MySource_Matrix_Packages
+* @subpackage %package%
+*/
+class %class_name% extends %parent_class_name%
+{
+
+
+	/**
+	* Constructor
+	*
+	* @param int	$assetid	the asset id to be loaded
+	*
+	*/
+	function __construct($assetid=0)
+	{
+		parent::__construct($assetid);
+
+	}//end constructor
+
+
+}//end class
+
+?>

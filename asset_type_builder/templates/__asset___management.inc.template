@@ -1,0 +1,33 @@
+<?php
+%header%
+
+require_once SQ_INCLUDE_PATH.'/asset_management.inc';
+
+/**
+* %class_name%_Management
+*
+* @see Asset_Management
+*
+* @author  Geoffroy Noel <gnoel@squiz.co.uk>
+* @version $Revision$
+* @package MySource_Matrix_Packages
+* @subpackage %package%
+*/
+class %class_name%_Management extends Asset_Management
+{
+
+
+	/**
+	* Constructor
+	*
+	*/
+	function __construct(Package_Manager $pm)
+	{
+		Asset_Management::__construct($pm);
+
+	}//end constructor
+
+
+}//end class
+
+?>

@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<?xml-stylesheet href="../../asset.xsl" type="text/xsl"?>
+
+<!--
+%header%
+-->
+
+<asset_info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../asset.xsd">
+	<package>%package%</package>
+	<type_code>%type_code%</type_code>
+	<version>0.1</version>
+	<name>%name%</name>
+	<description>%description%</description>
+	<instantiable>%instantiable%</instantiable>
+	<allowed_access>%allowed_access%</allowed_access>
+	<parent_type>%parent_type%</parent_type>
+	<requirements>
+		%requirement%
+	</requirements>
+	<flash_menu_path>%flash_menu_path%</flash_menu_path>
+</asset_info>
