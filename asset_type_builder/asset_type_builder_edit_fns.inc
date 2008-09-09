@@ -37,6 +37,8 @@ require_once SQ_INCLUDE_PATH.'/asset_edit/asset_edit_fns.inc';
 */
 class Asset_Type_Builder_Edit_Fns extends Asset_Edit_Fns
 {
+	
+	var $_build_error = '';
 
 	/**
 	* Constructor
@@ -47,6 +49,80 @@ class Asset_Type_Builder_Edit_Fns extends Asset_Edit_Fns
 		parent::__construct();
 
 	}//end constructor
+
+
+	/**
+	* Paint the interface for regenerating the report
+	*
+	* @param Report				$asset	the asset whose interface we are painting
+	* @param Backend_Outputter	$o		the backend outputter class
+	* @param string				$prefix	prefix for the form element
+	*
+	* @return boolean
+	* @access public
+	*/
+	public function paintBuildAssetType($asset, Backend_Outputter $o, $prefix)
+	{
+		if ($asset->writeAccess('attributes')) {
+			$parent_types = Array();
+			$asset_types = $GLOBALS['SQ_SYSTEM']->am->_asset_types;
+			foreach ($asset_types as $type_code => $info) {
+				$parent_types[$type_code] = $info['name'];
+			}
+			asort($parent_types);
+			
+			$type_post = array_get_index($_POST, $prefix.'_type_info', Array('name' => '', 'parent_type' => 'page_standard', 'description' => ''));
+
+			echo '<table>';
+			echo '<tr>';
+			echo '<td>Display Name:</td><td>';
+			text_box($prefix.'_type_info[name]', $type_post['name'], 30);
+			echo '</td></tr><tr><td>';
+			echo 'Description</td><td>';
+			text_box($prefix.'_type_info[description]', $type_post['description'], 100);
+			echo '</td></tr><tr><td>';
+			echo 'Inherit From</td><td>';
+			combo_box($prefix.'_type_info[parent_type]', $parent_types, FALSE, $type_post['parent_type'], 0);
+			echo '</td></tr></table>';
+			
+			$type_create = array_get_index($_POST, $prefix.'_type_info', Array());
+			if (!empty($type_create)) {
+				$this->_build_error = $asset->createAssetType($type_create);
+				if (!empty($this->_build_error)) {
+					echo '<span style="color:red;font-weight:bolder;">'.$this->_build_error.'</span></br>';
+				} else {
+					echo '<span style="color:green;font-weight:bolder;">'.'Creation successful!'.'</span></br>';
+				}
+			}
+			
+			//check_box($prefix.'_regenerate');
+			//label(translate('core_generate_report'), $prefix.'_regenerate');
+			return TRUE;
+		}
+		return FALSE;
+
+	}//end paintBuildAssetType()
+
+
+	/**
+	* Processes the interface for regenerating the report
+	*
+	* @param Report				$asset	the asset whose interface we are painting
+	* @param Backend_Outputter	$o		the backend outputter class
+	* @param string				$prefix	prefix for the form element
+	*
+	* @return boolean
+	* @access public
+	*/
+	public function processBuildAssetType($asset, Backend_Outputter $o, $prefix)
+	{
+		if (empty($_POST[$prefix.'_type_info'])) {
+			return FALSE;
+		}
+		
+		return TRUE;
+
+	}//end processBuildAssetType()
 
 
 }//end class

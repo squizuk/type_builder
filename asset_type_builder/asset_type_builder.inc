@@ -74,16 +74,25 @@ class Asset_Type_Builder extends Asset
 	* @return bool
 	* @access protected
 	*/
-	protected function _createAssetType($asset_type_info=Array())
+	public function createAssetType($asset_type_info=Array())
 	{
 		$ret = '';
 
 		// 1. validate and auto-complete the type info
 
-		$asset_type_info['name'] = ucwords(trim($asset_type_info['name']));
 		$asset_type_info['description'] = trim($asset_type_info['description']);
+		if (empty($asset_type_info['description'])) {
+			$asset_type_info['description'] = trim($asset_type_info['name']);
+		}
+		$asset_type_info['name'] = ucwords(trim($asset_type_info['name']));
 		$asset_type_info['parent_type'] = strtolower(trim($asset_type_info['parent_type']));
 		
+		if (empty($GLOBALS['SQ_SYSTEM']->am->_asset_types[strtolower($asset_type_info['parent_type'])]['dir'])) {
+			return "Asset type not found $parent_type";
+		}
+		
+		$parent_type_info = $GLOBALS['SQ_SYSTEM']->am->_asset_types[strtolower($asset_type_info['parent_type'])];
+
 		if (empty($asset_type_info['flash_menu_path'])) {
 			$asset_type_info['flash_menu_path'] = 'Custom Assets';
 		}
@@ -96,10 +105,10 @@ class Asset_Type_Builder extends Asset
 		
 		// 1.2 get parent type
 		if (empty($asset_type_info['instantiable'])) {
-			$asset_type_info['instantiable'] = 'yes';
+			$asset_type_info['instantiable'] = $parent_type_info['instantiable'] ? 'yes' : 'no';
 		}
 		if (empty($asset_type_info['allowed_access'])) {
-			$asset_type_info['allowed_access'] = 'backend_user';
+			$asset_type_info['allowed_access'] = $parent_type_info['allowed_access'];
 		}
 
 		if (empty($asset_type_info['sub_path'])) {
@@ -108,14 +117,10 @@ class Asset_Type_Builder extends Asset
 			$asset_type_info['sub_path'] = rtrim($asset_type_info['sub_path'], '/').'/'; 
 		}
 		
-		$asset_type_info['path'] = SQ_PACKAGES_PATH.'/'.$asset_type_info['package'].'/'.$asset_type_info['sub_path'].$asset_type_info['type_code'];
+		$asset_type_info['path'] = SQ_PACKAGES_PATH.'/'.$asset_type_info['package'].'/custom_assets/'.$asset_type_info['sub_path'].$asset_type_info['type_code'];
 		
 		$asset_type_info['header'] = $this->_getHeaders();
 		
-		if (empty($GLOBALS['SQ_SYSTEM']->am->_asset_types[strtolower($asset_type_info['parent_type'])]['dir'])) {
-			return "Asset type not found $parent_type";
-		}
-
 		// 2. remove and recreate existing asset folder
 		$ret_dir = $this->_recreateFolder($asset_type_info['path']);
 		if (!empty($ret_dir)) {
@@ -303,7 +308,7 @@ class Asset_Type_Builder extends Asset
 	{
 		$type_info = Array('name' => 'RM Article', 'description' => 'Royal Mail Article', 'parent_type' => 'page_standard');
 		
-		return $this->_createAssetType($type_info);
+		return $this->createAssetType($type_info);
 	
 	}//end test()
 
