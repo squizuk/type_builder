@@ -54,6 +54,9 @@ class Package_Manager_Type_builder extends Package_Manager
 	*/
 	function getSystemAssetTypes()
 	{
+		// xxx: move this to a more appropriate place
+		$this->_createCustomAssetsFolder();
+		
 		return Array('asset_type_builder');
 
 	}//end getSystemAssetTypes()
@@ -82,6 +85,35 @@ class Package_Manager_Type_builder extends Package_Manager
 		return $system_asset;
 
 	}//end createAssetTypeBuilder()
+	
+	
+	/**
+	* Purpose
+	*
+	* @param type	$p	desc
+	*
+	* @return bool
+	* @access protected
+	*/
+	protected function _createCustomAssetsFolder()
+	{
+		$ret = FALSE;
+		
+		$path = dirname(__FILE__).'/custom_assets';
+		if (!file_exists($path)) {
+			$rets = @mkdir($path);
+			pre_echo('Create folder '.$path.': '.($rets ? 'OK' : 'FAILED'));
+		}
+	
+		if (file_exists($path)) {
+			$rets = @system('chmod -R ug+w '.escapeshellarg($path));
+			pre_echo('Set permissions for '.$path.': '.(($rets !== FALSE) ? 'OK' : 'FAILED'));
+		}
+
+		return $ret;
+	
+	}//end 
+	
 
 
 }//end class
