@@ -289,7 +289,7 @@ class Asset_Type_Builder extends Asset
 			// xxx: need to find a safer way!
 			@system('rm -R '.escapeshellarg($path));
 		}
-	
+		
 		return !file_exists($path);
 	
 	}//end 
@@ -311,8 +311,90 @@ class Asset_Type_Builder extends Asset
 		return $this->createAssetType($type_info);
 	
 	}//end test()
+	
+	
+	/**
+	* Purpose
+	*
+	* @param type	$p	desc
+	*
+	* @return bool
+	* @access protected
+	*/
+	public function getAllCustomTypes()
+	{
+		$ret = Array();
+		foreach ($GLOBALS['SQ_SYSTEM']->am->_asset_types as $type_code => $type_info) {
+			if (preg_match('/type_builder\/custom_assets/i', $type_info['dir'])) {
+				$ret[$type_code] = $type_info;
+			}
+		}
+		
+		return $ret;
+	
+	}//end
+	
+	
+	/**
+	* Purpose
+	*
+	* @param type	$p	desc
+	*
+	* @return bool
+	* @access protected
+	*/
+	public function removeAssetType($type_code)
+	{
+		$ret = '';
+		
+		//$type_code = 'page';
+		
+		$descendants = $GLOBALS['SQ_SYSTEM']->am->getTypeDescendants($type_code, FALSE);
+		if (!empty($descendants)) {
+			return 'Cannot remove type, remove descendent types first: '.join(', ', $descendants);
+		}
+		
+		$assetids = $GLOBALS['SQ_SYSTEM']->am->getTypeAssetids($type_code, FALSE, TRUE);
+		if (!empty($assetids)) {
+			return 'Cannot remove type, remove all instances first: #'.join(', #', array_keys($assetids));
+		}
+		
+		// remove the code type
+		$path = SQ_SYSTEM_ROOT.'/'.$GLOBALS['SQ_SYSTEM']->am->_asset_types[$type_code]['dir'];
+		
+		if (!$this->_removeFolder($path)) {
+			return 'Cannot remove dir: '.$path;
+		}
+	
+		return $ret;
+	
+	}//end 
+	 
+	
 
 
 }//end class
+
+
+/*
+ * 	
+
+"bodycopy" => array (
+    "type_code" => "bodycopy",
+    "version" => "0.2",
+    "name" => "Bodycopy",
+    "instantiable" => "1",
+    "allowed_access" => "system",
+    "parent_type" => "asset",
+    "dir" => "core/assets/bodycopy/bodycopy",
+    "customisation" => "0",
+    "description" => "BodyCopy Object, create tables to format content",
+    "lvl" => "1",
+    "ancestor_types" => array (
+        [Empty]
+    ) 
+),
+ 
+ */
 
 ?>

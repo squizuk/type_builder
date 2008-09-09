@@ -115,7 +115,6 @@ class Package_Manager_Type_builder extends Package_Manager
 	}//end 
 	
 
-
 }//end class
 
 ?>

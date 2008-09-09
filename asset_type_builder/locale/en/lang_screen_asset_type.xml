@@ -26,4 +26,14 @@
 			</function_call>
 		</field>
 	</section>
+	<section name="Remove Custom Type">
+		<field>
+			<display_name></display_name>
+			<note></note>
+			<function_call>
+				<paint_function   name="paintRemoveAssetType"  />
+				<process_function name="processRemoveAssetType"  />
+			</function_call>
+		</field>
+	</section>
 </contents>
