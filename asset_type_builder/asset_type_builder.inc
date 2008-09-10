@@ -157,6 +157,9 @@ class Asset_Type_Builder extends Asset
 		    		$file_dest_full = $asset_type_info['path'].'/'.$file_dest;
 		    		if (FALSE === file_put_contents($file_dest_full, $contents)) {
 						return 'Cannot write file ('.$file_dest_full.')';
+		    		} else {
+		    			// sets the permissions and group
+		    			chmod($file_dest_full, 0775);
 		    		}
 		    	}
 		    }
@@ -369,8 +372,6 @@ class Asset_Type_Builder extends Asset
 		return $ret;
 	
 	}//end 
-	 
-	
 
 
 }//end class
