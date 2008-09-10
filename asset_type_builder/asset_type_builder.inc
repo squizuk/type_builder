@@ -93,9 +93,6 @@ class Asset_Type_Builder extends Asset
 		
 		$parent_type_info = $GLOBALS['SQ_SYSTEM']->am->_asset_types[strtolower($asset_type_info['parent_type'])];
 
-		if (empty($asset_type_info['flash_menu_path'])) {
-			$asset_type_info['flash_menu_path'] = 'Custom Assets';
-		}
 		if (empty($asset_type_info['package'])) {
 			$asset_type_info['package'] = 'type_builder';
 		}
@@ -104,11 +101,22 @@ class Asset_Type_Builder extends Asset
 		}
 		
 		// 1.2 get parent type
-		if (empty($asset_type_info['instantiable'])) {
+		// if nopt specified, we use the parent attribute
+		if (!isset($asset_type_info['instantiable'])) {
 			$asset_type_info['instantiable'] = $parent_type_info['instantiable'] ? 'yes' : 'no';
 		}
+		// normalise the value (1,0,no,yes are all valid)
+		$asset_type_info['instantiable'] = ($asset_type_info['instantiable'] == 'no' || empty($asset_type_info['instantiable'])) ? 'no' : 'yes';
 		if (empty($asset_type_info['allowed_access'])) {
 			$asset_type_info['allowed_access'] = $parent_type_info['allowed_access'];
+		}
+
+		if (empty($asset_type_info['flash_menu_path'])) {
+			$asset_type_info['flash_menu_path'] = 'Custom Assets';
+		}
+		// if not instantiable, not visble in the menu
+		if ($asset_type_info['instantiable'] == 'no') {
+			$asset_type_info['flash_menu_path'] = '';
 		}
 
 		if (empty($asset_type_info['sub_path'])) {
@@ -271,6 +279,8 @@ class Asset_Type_Builder extends Asset
 		
 		if (!file_exists($path)) {
 			return 'Cannot create asset folder ('.$path.')';
+		} else {
+			@system('chmod ug+rw '.escapeshellarg($path));
 		}
 		
 		return '';

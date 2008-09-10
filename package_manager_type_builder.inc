@@ -106,7 +106,7 @@ class Package_Manager_Type_builder extends Package_Manager
 		}
 	
 		if (file_exists($path)) {
-			$rets = @system('chmod -R ug+w '.escapeshellarg($path));
+			$rets = @system('chmod -R ug+w '.escapeshellarg($path).' > /dev/null 2> /dev/null ');
 			//pre_echo('Set permissions for '.$path.': '.(($rets !== FALSE) ? 'OK' : 'FAILED'));
 		}
 

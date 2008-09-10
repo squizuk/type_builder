@@ -71,7 +71,9 @@ class Asset_Type_Builder_Edit_Fns extends Asset_Edit_Fns
 			}
 			asort($parent_types);
 			
-			$type_post = array_get_index($_POST, $prefix.'_type_info', Array('name' => '', 'parent_type' => 'page_standard', 'description' => '', 'flash_menu_path' => ''));
+			$type_post = array_get_index($_POST, $prefix.'_type_info', Array('name' => '', 
+										'parent_type' => 'page_standard', 'description' => '', 'flash_menu_path' => '',
+										'hide_from_menu' => 0));
 
 			echo '<table>';
 			echo '<tr><td>';
@@ -80,16 +82,23 @@ class Asset_Type_Builder_Edit_Fns extends Asset_Edit_Fns
 			echo '</td></tr><tr><td>';
 			echo 'Display Name*</td><td>';
 			text_box($prefix.'_type_info[name]', $type_post['name'], 30);
+			echo '<br/>Please avoid any special character. Only alphanumeric and spaces are allowed. You can capitalise words.';
 			echo '</td></tr><tr><td>';
 			echo 'Menu</td><td>';
 			text_box($prefix.'_type_info[flash_menu_path]', $type_post['flash_menu_path'], 30);
+			echo '&nbsp;';
+			check_box($prefix.'_type_info[hide_from_menu]', '1', !empty($type_post['hide_from_menu']), 30);
+			echo ' Hide from the menu?';
+			echo '<br/>If empty, the menu path will be "Custom Assets"';
 			echo '</td></tr><tr><td>';
 			echo 'Description</td><td>';
 			text_box($prefix.'_type_info[description]', $type_post['description'], 100);
+			echo '<br/>If empty, the description will be the name of the asset';
 			echo '</td></tr></table>';
 			
 			$type_create = array_get_index($_POST, $prefix.'_type_info', Array());
 			if (!empty($type_create['name'])) {
+				$type_create['instantiable'] = empty($type_create['hide_from_menu']) ? 1 : 0;
 				$this->_build_error = $asset->createAssetType($type_create);
 				if (!empty($this->_build_error)) {
 					echo '<span style="color:red;font-weight:bolder;">'.$this->_build_error.'</span></br>';
