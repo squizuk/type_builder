@@ -102,12 +102,12 @@ class Package_Manager_Type_builder extends Package_Manager
 		$path = dirname(__FILE__).'/custom_assets';
 		if (!file_exists($path)) {
 			$rets = @mkdir($path);
-			pre_echo('Create folder '.$path.': '.($rets ? 'OK' : 'FAILED'));
+			//pre_echo('Create folder '.$path.': '.($rets ? 'OK' : 'FAILED'));
 		}
 	
 		if (file_exists($path)) {
 			$rets = @system('chmod -R ug+w '.escapeshellarg($path));
-			pre_echo('Set permissions for '.$path.': '.(($rets !== FALSE) ? 'OK' : 'FAILED'));
+			//pre_echo('Set permissions for '.$path.': '.(($rets !== FALSE) ? 'OK' : 'FAILED'));
 		}
 
 		return $ret;
