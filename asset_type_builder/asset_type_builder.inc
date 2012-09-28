@@ -420,6 +420,12 @@ class Asset_Type_Builder extends Asset
 
 	// attempt to run step_03
 	protected function _runStep03($asset_type_info = false, $log_filename = 'type_builder', $details = '') {
+		// TODO check for appropriate permissions immediately and print a message or run step_03
+		// Need to check for write permission to 
+		// core/lib/DAL/Oven/core
+		// core/lib/DAL/Oven/*_package
+		// core/lib/DAL/QueryStore
+
 		// if we don't set this then step_03 will attempt to reinstall everything
 		$package_list = array(
 			$asset_type_info['package'] => array(
@@ -431,33 +437,26 @@ class Asset_Type_Builder extends Asset
 
 		log_write('starting step_03 for ' . $asset_type_info['type_code'] . $details, $log_filename);
 
-		# store existing values
+		// store existing values
 		$displayErrors = ini_get('display_errors');
 		$errorLevel = error_reporting();
 
-		# silence the first bit of step_03 - a couple of notices sneak through
-//		ini_set('display_errors', false);
-//		ini_set('error_reporting', 0);
-
-		try {
-			// replace SQ_SYSTEM with a class that will silence PHP again when
-			// a certain method is called - this is our workaround for everything
-			// being performed in step_03.php
-			$GLOBALS['SQ_SYSTEM'] = new silent_system($GLOBALS['SQ_SYSTEM']);
-			@include SQ_SYSTEM_ROOT . '/install/step_03.php';
-			// don't put any code here because we know an exception will be thrown above
-		}
-		catch (DALException $e) {
-			// we're silencing the following exception:
-			// Query object already exists, and was unable to be removed
-		}
+		// replace SQ_SYSTEM with a class that will silence PHP again when
+		// a certain method is called - this is our workaround for everything
+		// being performed in step_03.php
+		$GLOBALS['SQ_SYSTEM'] = new silent_system($GLOBALS['SQ_SYSTEM']);
+		
+		// we also need to capture stdout - we'll dump it in the log
+		ob_start();
+		// silence step_03 - this is undone early in step_03 which is why
+		// we're using the silent_system
+		@include SQ_SYSTEM_ROOT . '/install/step_03.php';
+		log_write(ob_get_contents(), $log_filename);
+		ob_end_clean();
 
 		// restore our previous visual settings
 		ini_set('display_errors', $displayErrors);
 		error_reporting($errorLevel);
-
-		// setRunLevel is called once in step_03
-		$GLOBALS['SQ_SYSTEM']->restoreRunLevel();
 	}
 
 
@@ -472,11 +471,9 @@ class silent_system {
 
 	function __construct($target) {
 		$this->_target = $target;
-log_write('created system proxy', 'type_builder');
 	}
 
 	function __call($func, $args) {
-log_write('proxy __call for ' . $func, 'type_builder');
 		if ($func == 'changeDatabaseConnection') {
 			// try and hush things up
 			ini_set('display_errors', false);
@@ -490,12 +487,10 @@ log_write('proxy __call for ' . $func, 'type_builder');
 	}
 
 	function __get($key) {
-log_write('proxy __get for ' . $key, 'type_builder');
 		return $this->_target->$key;
 	}
 
 	function __set($key, $val) {
-log_write('proxy __set for ' . $key, 'type_builder');
 		return $this->_target->$key = $val;
 	}
 }
