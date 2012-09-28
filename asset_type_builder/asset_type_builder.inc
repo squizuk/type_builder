@@ -369,7 +369,11 @@ class Asset_Type_Builder extends Asset
 		
 		$assetids = $GLOBALS['SQ_SYSTEM']->am->getTypeAssetids($type_code, FALSE, TRUE);
 		if (!empty($assetids)) {
-			return 'Cannot remove type, remove all instances first: #'.join(', #', array_keys($assetids));
+			ksort($assetids);
+			foreach (array_keys($assetids) as $assetid) {
+				$ret .= get_asset_tag_line($assetid) . '<br/>';
+			}
+			return 'Cannot remove type, remove all instances first:<br/>' . $ret;
 		}
 		
 		// remove the code type
@@ -408,4 +412,4 @@ class Asset_Type_Builder extends Asset
  
  */
 
-?>
+
