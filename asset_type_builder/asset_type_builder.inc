@@ -173,20 +173,7 @@ class Asset_Type_Builder extends Asset
 		    }
 		}
 
-		// attempt to run step_03
-		$package_list = array(
-			$asset_type_info['package'] => array(
-				$asset_type_info['type_code'],
-			),
-		);
-		$_GET['SYSTEM_ROOT'] = SQ_SYSTEM_ROOT;
-
-		log_write('starting install of ' . $asset_type_info['type_code'], 'type_builder');
-		ob_start();
-		include SQ_SYSTEM_ROOT . '/install/step_03.php';
-		log_write(ob_get_contents(), 'type_builder');
-		ob_end_clean();
-		log_write('finished install of ' . $asset_type_info['type_code'], 'type_builder');
+		$this->_runStep03($asset_type_info, 'type_builder', ' install');
 		
 		return $ret;
 	
@@ -397,13 +384,121 @@ class Asset_Type_Builder extends Asset
 		if (!$this->_removeFolder($path)) {
 			return 'Cannot remove dir: '.$path;
 		}
+
+		// get the information required to isolate step_03
+		$type_info = $GLOBALS['SQ_SYSTEM']->am->_asset_types[$type_code];
+		// finding the package of an asset requires traversing up the filesystem from
+		// the package path until you hit a package.xml - lame
+		$type_info['package'] = $this->_findParentPackage($path);
+
+		// attempt to run step_03
+		// TODO what to do if $type_info['package'] is false
+		$this->_runStep03($type_info, 'type_builder', ' uninstall');
 	
 		return $ret;
 	
 	}//end 
 
 
+	protected function _findParentPackage($path) {
+		$bits = explode(DIRECTORY_SEPARATOR, $path);
+
+		while (array_pop($bits)) {
+			if (file_exists(implode(DIRECTORY_SEPARATOR, array_merge(
+				$bits,
+				array(
+					'package.xml',
+				)
+			)))) {
+				return array_pop($bits);
+			}
+		}
+
+		return false;
+	}
+
+
+	// attempt to run step_03
+	protected function _runStep03($asset_type_info = false, $log_filename = 'type_builder', $details = '') {
+		// if we don't set this then step_03 will attempt to reinstall everything
+		$package_list = array(
+			$asset_type_info['package'] => array(
+				$asset_type_info['type_code'],
+			),
+		);
+		// pass the system root to step_03
+		$_GET['SYSTEM_ROOT'] = SQ_SYSTEM_ROOT;
+
+		log_write('starting step_03 for ' . $asset_type_info['type_code'] . $details, $log_filename);
+
+		# store existing values
+		$displayErrors = ini_get('display_errors');
+		$errorLevel = error_reporting();
+
+		# silence the first bit of step_03 - a couple of notices sneak through
+//		ini_set('display_errors', false);
+//		ini_set('error_reporting', 0);
+
+		try {
+			// replace SQ_SYSTEM with a class that will silence PHP again when
+			// a certain method is called - this is our workaround for everything
+			// being performed in step_03.php
+			$GLOBALS['SQ_SYSTEM'] = new silent_system($GLOBALS['SQ_SYSTEM']);
+			@include SQ_SYSTEM_ROOT . '/install/step_03.php';
+			// don't put any code here because we know an exception will be thrown above
+		}
+		catch (DALException $e) {
+			// we're silencing the following exception:
+			// Query object already exists, and was unable to be removed
+		}
+
+		// restore our previous visual settings
+		ini_set('display_errors', $displayErrors);
+		error_reporting($errorLevel);
+
+		// setRunLevel is called once in step_03
+		$GLOBALS['SQ_SYSTEM']->restoreRunLevel();
+	}
+
+
 }//end class
+
+// This class is intended to be used to proxy for the SQ_SYSTEM until
+// the first method is called after error reporting has been changed in
+// step_03.php.  At this point error reporting will be disabled and the
+// original SQ_SYSTEM object will be reinstated to $GLOBALS['SQ_SYSTEM']
+class silent_system {
+	private $_target;
+
+	function __construct($target) {
+		$this->_target = $target;
+log_write('created system proxy', 'type_builder');
+	}
+
+	function __call($func, $args) {
+log_write('proxy __call for ' . $func, 'type_builder');
+		if ($func == 'changeDatabaseConnection') {
+			// try and hush things up
+			ini_set('display_errors', false);
+			ini_set('error_reporting', 0);
+
+			// replace the original SQ_SYSTEM
+			$GLOBALS['SQ_SYSTEM'] = $this->_target;
+		}
+
+		return call_user_func_array(array($this->_target, $func), $args);
+	}
+
+	function __get($key) {
+log_write('proxy __get for ' . $key, 'type_builder');
+		return $this->_target->$key;
+	}
+
+	function __set($key, $val) {
+log_write('proxy __set for ' . $key, 'type_builder');
+		return $this->_target->$key = $val;
+	}
+}
 
 
 /*
