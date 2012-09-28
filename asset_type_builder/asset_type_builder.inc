@@ -172,6 +172,21 @@ class Asset_Type_Builder extends Asset
 		    	}
 		    }
 		}
+
+		// attempt to run step_03
+		$package_list = array(
+			$asset_type_info['package'] => array(
+				$asset_type_info['type_code'],
+			),
+		);
+		$_GET['SYSTEM_ROOT'] = SQ_SYSTEM_ROOT;
+
+		log_write('starting install of ' . $asset_type_info['type_code'], 'type_builder');
+		ob_start();
+		include SQ_SYSTEM_ROOT . '/install/step_03.php';
+		log_write(ob_get_contents(), 'type_builder');
+		ob_end_clean();
+		log_write('finished install of ' . $asset_type_info['type_code'], 'type_builder');
 		
 		return $ret;
 	
