@@ -1,15 +1,17 @@
 # Origin
-This has been forked from https://github.com/squizuk/type_builder
+This has been forked from https://github.com/squizuk/type_builder  
 See the discussion about this in roadmap - https://rm.squiz.net/matrix/610
 
 # Requirements
-A working install of Squiz Matrix (only tested on 4.10.2)
-php-process (for posix_getpwuid and posix_geteuid)
-Knowledge of which user the webserver runs as (referred to as $WEB_USER in this document)
+* A working install of Squiz Matrix (only tested on 4.10.2)
+* PHP functions (available in Scientific Linux via the php-process RPM)
+	* posix_geteuid
+	* posix_getpwuid
+* Knowledge of which user the webserver runs as (referred to as $WEB_USER in this document)
 
 # Installation
-Clone this package into your matrix packages directory
-Run the following commands as root (assumes you're in the matrix root directory):
+1. Clone this package into your matrix packages directory
+1. Run the following commands as root (assumes you're in the matrix root directory):
 	php install/step_03.php $(pwd) --package=type_builder
 	php install/compile_locale.php $(pwd)
 	chown -R $WEB_USER packages/type_builder
