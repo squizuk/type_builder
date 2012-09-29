@@ -40,6 +40,8 @@ class Package_Manager_Type_builder extends Package_Manager
 	function __construct()
 	{
 		$this->_assetDirectory = SQ_DATA_PATH . '/custom_assets';
+		$this->_createCustomAssetsFolder();
+
 		$this->_full_path = SQ_PACKAGES_PATH . '/type_builder';
 		parent::__construct();
 
@@ -78,9 +80,6 @@ class Package_Manager_Type_builder extends Package_Manager
 	*/
 	function getSystemAssetTypes()
 	{
-		// xxx: move this to a more appropriate place
-		$this->_createCustomAssetsFolder();
-		
 		return Array('asset_type_builder');
 
 	}//end getSystemAssetTypes()
