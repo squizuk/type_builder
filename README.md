@@ -16,10 +16,10 @@ See the discussion about this in roadmap - https://rm.squiz.net/matrix/610
 1. Clone this package into your matrix packages directory
 1. Run the following commands as root (assumes you're in the matrix root directory):
 
-	php install/step_03.php $(pwd) --package=type_builder
-	php install/compile_locale.php $(pwd)
-	chown -R $WEB_USER packages/type_builder
-	chown -R $WEB_USER data/public/asset_types/asset_type_builder
+		php install/step_03.php $(pwd) --package=type_builder
+		php install/compile_locale.php $(pwd)
+		chown -R $WEB_USER packages/type_builder
+		chown -R $WEB_USER data/public/asset_types/asset_type_builder
 
 # Usage
 Open the 'Asset Types' screen on the System Management->Asset Type Builder asset
