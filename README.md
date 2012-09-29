@@ -11,7 +11,7 @@ See the discussion about this in roadmap - https://rm.squiz.net/matrix/610
 
 # Installation
 1. Clone this package into your matrix packages directory
-1. Run the following commands as root (assumes you're in the matrix root directory):
+1. Run the following commands as the same user as your original matrix install (assumes you're in the matrix root directory):
 
 		php install/step_03.php $(pwd) --package=type_builder
 		php install/compile_locale.php $(pwd)
@@ -23,10 +23,12 @@ Open the 'Asset Types' screen on the System Management->Asset Type Builder asset
 
 ## Creating types
 New types require two pieces of information, namely
+
 1. The Asset type to inherit from
 1. The display name of the asset
 
 Optional pieces of information are
+
 1. A submenu under which to place the asset in the asset map's asset list (defaults to "Custom Assets"
 1. A description of the new asset type
 
@@ -34,6 +36,7 @@ To complete the installation of the new Asset type we must run step_03 to rebuil
 
 ## Deleting types
 To remove a type you just need to select the appropriate type from the 'Delete Type' select field and commit.  There are a few requirements to successfully removing a type:
+
 1. No Assets of the specified type exist
 1. No Asset types descend from the specified Asset type
 
