@@ -173,7 +173,7 @@ class Asset_Type_Builder extends Asset
 		    }
 		}
 
-		$this->_runStep03($asset_type_info, 'type_builder', ' install');
+		$ret .= $this->_runStep03($asset_type_info, 'type_builder', ' install');
 		
 		return $ret;
 	
@@ -280,7 +280,8 @@ class Asset_Type_Builder extends Asset
 		@mkdir($path);
 		
 		if (!file_exists($path)) {
-			return 'Cannot create asset folder ('.$path.')';
+			$userInfo = posix_getpwuid(posix_geteuid());
+			return 'Cannot create asset folder ('.$path.').  Possible rememdies include granting write permissions on ' . dirname($path) . ' to the ' . $userInfo['name'] . ' user';
 		} else {
 			@system('chmod ug+rw '.escapeshellarg($path));
 		}
@@ -393,7 +394,7 @@ class Asset_Type_Builder extends Asset
 
 		// attempt to run step_03
 		// TODO what to do if $type_info['package'] is false
-		$this->_runStep03($type_info, 'type_builder', ' uninstall');
+		$ret .= $this->_runStep03($type_info, 'type_builder', ' uninstall');
 	
 		return $ret;
 	
@@ -425,6 +426,25 @@ class Asset_Type_Builder extends Asset
 		// core/lib/DAL/Oven/core
 		// core/lib/DAL/Oven/*_package
 		// core/lib/DAL/QueryStore
+		$requiredDirs = array_merge(array(
+				SQ_SYSTEM_ROOT . '/core/lib/DAL/Oven/core',
+				SQ_SYSTEM_ROOT . '/core/lib/DAL/QueryStore',
+			),
+			glob(SQ_SYSTEM_ROOT . '/core/lib/DAL/Oven/*_package', GLOB_ONLYDIR)
+		);
+		$deniedDirs = array();
+
+		foreach ($requiredDirs as $requiredDir) {
+			if (!is_writable($requiredDir)) array_push($deniedDirs, $requiredDir);
+		}
+
+		if ($deniedDirs) {
+			$userInfo = posix_getpwuid(posix_geteuid());
+			return 'You must run install/step_03.php to complete the type '.$details.' (eg. php install/step_03.php --package=' . $asset_type_info['package'] . '-' . $asset_type_info['type_code'] . ').<br/><br/>' .
+				'For step_03 to run automatically write permission must be granted to the ' .
+				$userInfo['name'] . ' user on the following directories:<br/>' .
+				implode('<br/>', $deniedDirs);
+		}
 
 		// if we don't set this then step_03 will attempt to reinstall everything
 		$package_list = array(
