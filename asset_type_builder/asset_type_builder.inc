@@ -173,7 +173,7 @@ class Asset_Type_Builder extends Asset
 		    }
 		}
 
-		$ret .= $this->_runStep03($asset_type_info, 'type_builder', ' install');
+		$ret .= $this->_installAssetType($asset_type_info, 'type_builder');
 		
 		return $ret;
 	
@@ -392,12 +392,9 @@ class Asset_Type_Builder extends Asset
 		// the package path until you hit a package.xml - lame
 		$type_info['package'] = $this->_findParentPackage($path);
 
-		// attempt to run step_03
-		// TODO what to do if $type_info['package'] is false
-		$ret .= $this->_runStep03($type_info, 'type_builder', ' uninstall');
-	
+		$this->_uninstallAssetType($type_info);
+
 		return $ret;
-	
 	}//end 
 
 
@@ -419,102 +416,38 @@ class Asset_Type_Builder extends Asset
 	}
 
 
-	// attempt to run step_03
-	protected function _runStep03($asset_type_info = false, $log_filename = 'type_builder', $details = '') {
-		// TODO check for appropriate permissions immediately and print a message or run step_03
-		// Need to check for write permission to 
-		// core/lib/DAL/Oven/core
-		// core/lib/DAL/Oven/*_package
-		// core/lib/DAL/QueryStore
-		$requiredDirs = array_merge(array(
-				SQ_SYSTEM_ROOT . '/core/lib/DAL/Oven/core',
-				SQ_SYSTEM_ROOT . '/core/lib/DAL/QueryStore',
-			),
-			glob(SQ_SYSTEM_ROOT . '/core/lib/DAL/Oven/*_package', GLOB_ONLYDIR)
-		);
-		$deniedDirs = array();
+	protected function _installAssetType($asset_type_info, $log_filename = 'type_builder') {
+		require_once SQ_FUDGE_PATH . '/general/file_system.inc';
+		require_once SQ_SYSTEM_ROOT . '/install/install.inc';
 
-		foreach ($requiredDirs as $requiredDir) {
-			if (!is_writable($requiredDir)) array_push($deniedDirs, $requiredDir);
+		// TODO keep this quiet if we want
+		$result = install_package($asset_type_info['package'], array($asset_type_info['type_code']));
+		if (is_array($result)) {
+			# this would be a deferred install normally
+			return 'failed - check error_log for hints';
 		}
 
-		if ($deniedDirs) {
-			$userInfo = posix_getpwuid(posix_geteuid());
-			return 'You must run install/step_03.php to complete the type '.$details.' (eg. php install/step_03.php --package=' . $asset_type_info['package'] . '-' . $asset_type_info['type_code'] . ').<br/><br/>' .
-				'For step_03 to run automatically write permission must be granted to the ' .
-				$userInfo['name'] . ' user on the following directories:<br/>' .
-				implode('<br/>', $deniedDirs);
-		}
+		// rebuild the asset cache
+		cache_asset_types();
+	}
 
-		// if we don't set this then step_03 will attempt to reinstall everything
-		$package_list = array(
-			$asset_type_info['package'] => array(
-				$asset_type_info['type_code'],
-			),
-		);
-		// pass the system root to step_03
-		$_GET['SYSTEM_ROOT'] = SQ_SYSTEM_ROOT;
 
-		log_write('starting step_03 for ' . $asset_type_info['type_code'] . $details, $log_filename);
+	protected function _uninstallAssetType($asset_type_info, $log_filename = 'type_builder') {
+		require_once SQ_FUDGE_PATH . '/general/file_system.inc';
+		require_once SQ_SYSTEM_ROOT . '/install/install.inc';
 
-		// store existing values
-		$displayErrors = ini_get('display_errors');
-		$errorLevel = error_reporting();
+		// this tidies up the database
+		uninstall_asset_types();
 
-		// replace SQ_SYSTEM with a class that will silence PHP again when
-		// a certain method is called - this is our workaround for everything
-		// being performed in step_03.php
-		$GLOBALS['SQ_SYSTEM'] = new silent_system($GLOBALS['SQ_SYSTEM']);
-		
-		// we also need to capture stdout - we'll dump it in the log
-		ob_start();
-		// silence step_03 - this is undone early in step_03 which is why
-		// we're using the silent_system
-		@include SQ_SYSTEM_ROOT . '/install/step_03.php';
-		log_write(ob_get_contents(), $log_filename);
-		ob_end_clean();
+		// this tidies up the asset_map
+		install_package($asset_type_info['package'], array($asset_type_info['type_code']));
 
-		// restore our previous visual settings
-		ini_set('display_errors', $displayErrors);
-		error_reporting($errorLevel);
+		// rebuild the asset cache
+		cache_asset_types();
 	}
 
 
 }//end class
-
-// This class is intended to be used to proxy for the SQ_SYSTEM until
-// the first method is called after error reporting has been changed in
-// step_03.php.  At this point error reporting will be disabled and the
-// original SQ_SYSTEM object will be reinstated to $GLOBALS['SQ_SYSTEM']
-class silent_system {
-	private $_target;
-
-	function __construct($target) {
-		$this->_target = $target;
-	}
-
-	function __call($func, $args) {
-		if ($func == 'changeDatabaseConnection') {
-			// try and hush things up
-			ini_set('display_errors', false);
-			ini_set('error_reporting', 0);
-
-			// replace the original SQ_SYSTEM
-			$GLOBALS['SQ_SYSTEM'] = $this->_target;
-		}
-
-		return call_user_func_array(array($this->_target, $func), $args);
-	}
-
-	function __get($key) {
-		return $this->_target->$key;
-	}
-
-	function __set($key, $val) {
-		return $this->_target->$key = $val;
-	}
-}
-
 
 /*
  * 	
