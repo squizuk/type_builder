@@ -29,7 +29,7 @@ New types require two pieces of information, namely
 
 Optional pieces of information are
 
-1. A submenu under which to place the asset in the asset map's asset list (defaults to "Custom Assets"
+1. A submenu under which to place the asset in the asset map's asset list (defaults to `Custom Assets`)
 1. A description of the new asset type
 
 To complete the installation of the new Asset type we must run `install/step_03.php` to rebuild the asset cache and put some details in the database.  This can be done manually or automatically however both methods have their pitfalls.  See [step_03](#step_03) for details.
