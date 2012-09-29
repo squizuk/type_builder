@@ -12,6 +12,7 @@ See the discussion about this in roadmap - https://rm.squiz.net/matrix/610
 # Installation
 1. Clone this package into your matrix packages directory
 1. Run the following commands as root (assumes you're in the matrix root directory):
+
 	php install/step_03.php $(pwd) --package=type_builder
 	php install/compile_locale.php $(pwd)
 	chown -R $WEB_USER packages/type_builder
@@ -45,6 +46,7 @@ The install/step_03.php script has a few requirements to complete successfully a
 - core/lib/DAL/QueryStore
 
 If the above directories are owned by the webserver user, then the Asset Type Builder will automatically run step_03 for you and all that's left is to refresh the page.  However if you haven't changed the permissions of the above directories then it's left to you to run step_03 to complete the process.  To perform required changes you can run the following commands:
+
 	php install/step_03.php $(pwd) --package=type_builder
 	chown -R $WEB_USER data/public/asset_types/<new asset type>
 
