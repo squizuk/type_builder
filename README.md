@@ -1,3 +1,6 @@
+* This list will contain the toc (it doesn't matter what you write here)
+{:toc}
+
 # Origin
 This has been forked from https://github.com/squizuk/type_builder  
 See the discussion about this in roadmap - https://rm.squiz.net/matrix/610
@@ -45,7 +48,8 @@ The install/step_03.php script has a few requirements to complete successfully a
 - core/lib/DAL/Oven/*_package
 - core/lib/DAL/QueryStore
 
-If the above directories are owned by the webserver user, then the Asset Type Builder will automatically run step_03 for you and all that's left is to refresh the page.  However if you haven't changed the permissions of the above directories then it's left to you to run step_03 to complete the process.  To perform required changes you can run the following commands:
+If the above directories are owned by the webserver user, then the Asset Type Builder will automatically run step_03 for you and all that's left is to refresh the page.  However if you haven't changed the permissions of the above directories then it's left to you to run step_03 to complete the process.  
+To perform required changes you can run the following commands:
 
 	php install/step_03.php $(pwd) --package=type_builder
 	chown -R $WEB_USER data/public/asset_types/<new asset type>
