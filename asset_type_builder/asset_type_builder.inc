@@ -125,7 +125,7 @@ class Asset_Type_Builder extends Asset
 			$asset_type_info['sub_path'] = rtrim($asset_type_info['sub_path'], '/').'/'; 
 		}
 		
-		$asset_type_info['path'] = SQ_PACKAGES_PATH.'/'.$asset_type_info['package'].'/custom_assets/'.$asset_type_info['sub_path'].$asset_type_info['type_code'];
+		$asset_type_info['path'] = SQ_DATA_PATH.'/custom_assets/'.$asset_type_info['sub_path'].$asset_type_info['type_code'];
 		
 		$asset_type_info['header'] = $this->_getHeaders();
 		
@@ -341,7 +341,7 @@ class Asset_Type_Builder extends Asset
 	{
 		$ret = Array();
 		foreach ($GLOBALS['SQ_SYSTEM']->am->_asset_types as $type_code => $type_info) {
-			if (preg_match('/type_builder\/custom_assets/i', $type_info['dir'])) {
+			if (preg_match('/^data\/custom_assets/i', $type_info['dir'])) {
 				$ret[$type_code] = $type_info;
 			}
 		}
@@ -386,34 +386,18 @@ class Asset_Type_Builder extends Asset
 			return 'Cannot remove dir: '.$path;
 		}
 
-		// get the information required to isolate step_03
 		$type_info = $GLOBALS['SQ_SYSTEM']->am->_asset_types[$type_code];
-		// finding the package of an asset requires traversing up the filesystem from
-		// the package path until you hit a package.xml - lame
-		$type_info['package'] = $this->_findParentPackage($path);
+		// matrix assets normally live in a subdirectory of the package that
+		// owns them.  We're different because we need custom code to survive
+		// an upgrade so our assets live in the data directory, and as such
+		// we can assume that all assets that live in our custom_assets directory
+		// belong to us
+		$type_info['package'] = 'type_builder';
 
 		$this->_uninstallAssetType($type_info);
 
 		return $ret;
 	}//end 
-
-
-	protected function _findParentPackage($path) {
-		$bits = explode(DIRECTORY_SEPARATOR, $path);
-
-		while (array_pop($bits)) {
-			if (file_exists(implode(DIRECTORY_SEPARATOR, array_merge(
-				$bits,
-				array(
-					'package.xml',
-				)
-			)))) {
-				return array_pop($bits);
-			}
-		}
-
-		return false;
-	}
 
 
 	protected function _installAssetType($asset_type_info, $log_filename = 'type_builder') {
@@ -440,6 +424,7 @@ class Asset_Type_Builder extends Asset
 		uninstall_asset_types();
 
 		// this tidies up the asset_map
+		// TODO keep this quiet if we want
 		install_package($asset_type_info['package'], array($asset_type_info['type_code']));
 
 		// rebuild the asset cache
