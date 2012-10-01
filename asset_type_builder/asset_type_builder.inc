@@ -125,7 +125,7 @@ class Asset_Type_Builder extends Asset
 			$asset_type_info['sub_path'] = rtrim($asset_type_info['sub_path'], '/').'/'; 
 		}
 		
-		$asset_type_info['path'] = SQ_PACKAGES_PATH.'/'.$asset_type_info['package'].'/custom_assets/'.$asset_type_info['sub_path'].$asset_type_info['type_code'];
+		$asset_type_info['path'] = SQ_DATA_PATH.'/custom_assets/'.$asset_type_info['sub_path'].$asset_type_info['type_code'];
 		
 		$asset_type_info['header'] = $this->_getHeaders();
 		
@@ -172,6 +172,8 @@ class Asset_Type_Builder extends Asset
 		    	}
 		    }
 		}
+
+		$ret .= $this->_installAssetType($asset_type_info, 'type_builder');
 		
 		return $ret;
 	
@@ -278,7 +280,8 @@ class Asset_Type_Builder extends Asset
 		@mkdir($path);
 		
 		if (!file_exists($path)) {
-			return 'Cannot create asset folder ('.$path.')';
+			$userInfo = posix_getpwuid(posix_geteuid());
+			return 'Cannot create asset folder ('.$path.').  Possible rememdies include granting write permissions on ' . dirname($path) . ' to the ' . $userInfo['name'] . ' user';
 		} else {
 			@system('chmod ug+rw '.escapeshellarg($path));
 		}
@@ -338,7 +341,7 @@ class Asset_Type_Builder extends Asset
 	{
 		$ret = Array();
 		foreach ($GLOBALS['SQ_SYSTEM']->am->_asset_types as $type_code => $type_info) {
-			if (preg_match('/type_builder\/custom_assets/i', $type_info['dir'])) {
+			if (preg_match('/^data\/custom_assets/i', $type_info['dir'])) {
 				$ret[$type_code] = $type_info;
 			}
 		}
@@ -369,7 +372,11 @@ class Asset_Type_Builder extends Asset
 		
 		$assetids = $GLOBALS['SQ_SYSTEM']->am->getTypeAssetids($type_code, FALSE, TRUE);
 		if (!empty($assetids)) {
-			return 'Cannot remove type, remove all instances first: #'.join(', #', array_keys($assetids));
+			ksort($assetids);
+			foreach (array_keys($assetids) as $assetid) {
+				$ret .= get_asset_tag_line($assetid) . '<br/>';
+			}
+			return 'Cannot remove type, remove all instances first:<br/>' . $ret;
 		}
 		
 		// remove the code type
@@ -378,14 +385,54 @@ class Asset_Type_Builder extends Asset
 		if (!$this->_removeFolder($path)) {
 			return 'Cannot remove dir: '.$path;
 		}
-	
+
+		$type_info = $GLOBALS['SQ_SYSTEM']->am->_asset_types[$type_code];
+		// matrix assets normally live in a subdirectory of the package that
+		// owns them.  We're different because we need custom code to survive
+		// an upgrade so our assets live in the data directory, and as such
+		// we can assume that all assets that live in our custom_assets directory
+		// belong to us
+		$type_info['package'] = 'type_builder';
+
+		$this->_uninstallAssetType($type_info);
+
 		return $ret;
-	
 	}//end 
 
 
-}//end class
+	protected function _installAssetType($asset_type_info, $log_filename = 'type_builder') {
+		require_once SQ_FUDGE_PATH . '/general/file_system.inc';
+		require_once SQ_SYSTEM_ROOT . '/install/install.inc';
 
+		// TODO keep this quiet if we want
+		$result = install_package($asset_type_info['package'], array($asset_type_info['type_code']));
+		if (is_array($result)) {
+			# this would be a deferred install normally
+			return 'failed - check error_log for hints';
+		}
+
+		// rebuild the asset cache
+		cache_asset_types();
+	}
+
+
+	protected function _uninstallAssetType($asset_type_info, $log_filename = 'type_builder') {
+		require_once SQ_FUDGE_PATH . '/general/file_system.inc';
+		require_once SQ_SYSTEM_ROOT . '/install/install.inc';
+
+		// this tidies up the database
+		uninstall_asset_types();
+
+		// this tidies up the asset_map
+		// TODO keep this quiet if we want
+		install_package($asset_type_info['package'], array($asset_type_info['type_code']));
+
+		// rebuild the asset cache
+		cache_asset_types();
+	}
+
+
+}//end class
 
 /*
  * 	
@@ -408,4 +455,4 @@ class Asset_Type_Builder extends Asset
  
  */
 
-?>
+
